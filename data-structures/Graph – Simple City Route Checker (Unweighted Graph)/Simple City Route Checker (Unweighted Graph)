@@ -1,0 +1,90 @@
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+#include <queue>
+#include <set>
+using namespace std;
+
+class Graph {
+private:
+    unordered_map<string, vector<string>> adj;
+
+public:
+    void addEdge(string city1, string city2) {
+        adj[city1].push_back(city2);
+        adj[city2].push_back(city1); // Undirected graph
+    }
+
+    void displayGraph() {
+        for (auto pair : adj) {
+            cout << pair.first << ": ";
+            for (string neighbor : pair.second)
+                cout << neighbor << " ";
+            cout << endl;
+        }
+    }
+
+    bool isPathExists(string start, string end) {
+        if (adj.find(start) == adj.end() || adj.find(end) == adj.end())
+            return false;
+
+        set<string> visited;
+        queue<string> q;
+        q.push(start);
+        visited.insert(start);
+
+        while (!q.empty()) {
+            string current = q.front();
+            q.pop();
+
+            if (current == end)
+                return true;
+
+            for (string neighbor : adj[current]) {
+                if (visited.find(neighbor) == visited.end()) {
+                    visited.insert(neighbor);
+                    q.push(neighbor);
+                }
+            }
+        }
+
+        return false;
+    }
+};
+
+int main() {
+    Graph g;
+    int choice;
+    string city1, city2;
+
+    do {
+        cout << "\n1. Add road\n2. Show map\n3. Check route\n4. Exit\n";
+        cout << "Your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter first city: ";
+                cin >> city1;
+                cout << "Enter second city: ";
+                cin >> city2;
+                g.addEdge(city1, city2);
+                break;
+            case 2:
+                g.displayGraph();
+                break;
+            case 3:
+                cout << "From city: ";
+                cin >> city1;
+                cout << "To city: ";
+                cin >> city2;
+                if (g.isPathExists(city1, city2))
+                    cout << "✅ Path exists.\n";
+                else
+                    cout << "❌ No path found.\n";
+                break;
+        }
+    } while (choice != 4);
+
+    return 0;
+}
