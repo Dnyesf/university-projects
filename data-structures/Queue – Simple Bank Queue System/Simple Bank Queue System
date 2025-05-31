@@ -1,0 +1,45 @@
+#include <iostream>
+#include <queue>
+using namespace std;
+
+int main() {
+    queue<string> bankQueue;
+    int choice;
+    string name;
+
+    do {
+        cout << "\n1. Add customer\n2. Serve customer\n3. Show queue\n4. Exit\n";
+        cout << "Your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter customer name: ";
+                cin >> name;
+                bankQueue.push(name);
+                break;
+            case 2:
+                if (!bankQueue.empty()) {
+                    cout << "Serving: " << bankQueue.front() << endl;
+                    bankQueue.pop();
+                } else {
+                    cout << "The queue is empty!\n";
+                }
+                break;
+            case 3:
+                if (bankQueue.empty()) {
+                    cout << "The queue is empty!\n";
+                } else {
+                    queue<string> temp = bankQueue;
+                    cout << "Current queue:\n";
+                    while (!temp.empty()) {
+                        cout << "- " << temp.front() << endl;
+                        temp.pop();
+                    }
+                }
+                break;
+        }
+    } while (choice != 4);
+
+    return 0;
+}
