@@ -1,0 +1,29 @@
+#include <iostream>
+#include <stack>
+using namespace std;
+
+bool checkParenthesesBalance(string expr) {
+    stack<char> s;
+    for (char ch : expr) {
+        if (ch == '(') {
+            s.push(ch);
+        } else if (ch == ')') {
+            if (s.empty()) return false;
+            s.pop();
+        }
+    }
+    return s.empty();
+}
+
+int main() {
+    string input;
+    cout << "Enter an expression: ";
+    getline(cin, input);
+
+    if (checkParenthesesBalance(input))
+        cout << "Parentheses are balanced ✅\n";
+    else
+        cout << "Parentheses are NOT balanced ❌\n";
+
+    return 0;
+}
