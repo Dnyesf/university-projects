@@ -1,0 +1,101 @@
+#include <iostream>
+using namespace std;
+
+struct Node {
+    string task;
+    Node* next;
+};
+
+class ToDoList {
+private:
+    Node* head;
+public:
+    ToDoList() {
+        head = nullptr;
+    }
+
+    void addTask(string title) {
+        Node* newNode = new Node{title, nullptr};
+        if (!head) {
+            head = newNode;
+        } else {
+            Node* temp = head;
+            while (temp->next)
+                temp = temp->next;
+            temp->next = newNode;
+        }
+    }
+
+    void removeTask(string title) {
+        if (!head) {
+            cout << "To-do list is empty.\n";
+            return;
+        }
+
+        if (head->task == title) {
+            Node* toDelete = head;
+            head = head->next;
+            delete toDelete;
+            cout << "Task removed.\n";
+            return;
+        }
+
+        Node* current = head;
+        while (current->next && current->next->task != title)
+            current = current->next;
+
+        if (current->next) {
+            Node* toDelete = current->next;
+            current->next = current->next->next;
+            delete toDelete;
+            cout << "Task removed.\n";
+        } else {
+            cout << "Task not found.\n";
+        }
+    }
+
+    void showTasks() {
+        if (!head) {
+            cout << "To-do list is empty.\n";
+            return;
+        }
+
+        Node* temp = head;
+        cout << "Your tasks:\n";
+        while (temp) {
+            cout << "- " << temp->task << endl;
+            temp = temp->next;
+        }
+    }
+};
+
+int main() {
+    ToDoList todo;
+    int choice;
+    string title;
+
+    do {
+        cout << "\n1. Add task\n2. Remove task\n3. Show tasks\n4. Exit\n";
+        cout << "Your choice: ";
+        cin >> choice;
+        cin.ignore(); // skip newline
+
+        switch (choice) {
+            case 1:
+                cout << "Task title: ";
+                getline(cin, title);
+                todo.addTask(title);
+                break;
+            case 2:
+                cout << "Task to remove: ";
+                getline(cin, title);
+                todo.removeTask(title);
+                break;
+            case 3:
+                todo.showTasks();
+                break;
+        }
+    } while (choice != 4);
+
+    return 0;
+}
