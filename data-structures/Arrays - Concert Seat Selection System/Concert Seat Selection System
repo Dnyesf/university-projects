@@ -1,0 +1,123 @@
+import tkinter as tk
+import customtkinter as ctk
+from tkinter import messagebox
+import threading
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
+
+seat_status = [[0 for _ in range(20)] for _ in range(10)]
+seat_prices = [[(i + 1) * 100000 for _ in range(20)] for i in range(10)] 
+seat_timers = {}
+
+circle_radius = 15
+padding = 10
+
+colors = {
+    "empty": "#757575",
+    "selected": "#ff6666",
+    "reserved": "#ffcc66",
+    "sold": "#1a1a1a",
+}
+
+def toggle_seat(row, col, circle):
+    if seat_status[row][col] == 0:  
+        seat_status[row][col] = 2
+        canvas.itemconfig(circle, outline=colors["selected"], width=0, fill=colors["selected"])
+    elif seat_status[row][col] == 2:
+        seat_status[row][col] = 0 
+        canvas.itemconfig(circle, outline=colors["empty"], width=0, fill=colors["empty"])
+
+def start_payment_timer(row, col):
+    def timer_action():
+        if seat_status[row][col] == 3:
+            seat_status[row][col] = 0
+            canvas.itemconfig(seat_circles[row][col], outline=colors["empty"], width=0, fill=colors["empty"])
+            del seat_timers[(row, col)]
+
+    timer = threading.Timer(10, timer_action)
+    timer.start()
+    seat_timers[(row, col)] = timer
+
+def confirm_selection():
+    selected_seats = [(i, j) for i in range(len(seat_status)) for j in range(len(seat_status[0])) if seat_status[i][j] == 2]
+    if selected_seats:
+        for i, j in selected_seats:
+            seat_status[i][j] = 3
+            canvas.itemconfig(seat_circles[i][j], outline=colors["reserved"], width=0, fill=colors["reserved"])
+            start_payment_timer(i, j)
+    else:
+        messagebox.showinfo("Notice", "No seat has been selected.")
+
+def payment_success():
+    for i in range(len(seat_status)):
+        for j in range(len(seat_status[0])):
+            if seat_status[i][j] == 3:
+                seat_status[i][j] = 1
+                canvas.itemconfig(seat_circles[i][j], outline=colors["sold"], width=0, fill=colors["sold"])
+                if (i, j) in seat_timers:
+                    seat_timers[(i, j)].cancel()
+                    del seat_timers[(i, j)]
+
+def show_seat_info(event, row, col):
+    if seat_status[row][col] == 1:
+        info_text = "Seat has been purchased"
+    elif seat_status[row][col] == 3:
+        info_text = "Seat is awaiting payment"
+    else:
+        price = seat_prices[row][col]
+        info_text = f"Row {row + 1}, Seat {col + 1}\nPrice: {price} Toman"
+
+    seat_info_label.config(text=info_text)
+    seat_info_label.place(x=event.x_root - root.winfo_rootx() - 50 , y=event.y_root - root.winfo_rooty() - 50)
+
+def hide_seat_info(event):
+    seat_info_label.place_forget()
+
+def draw_color_legend():
+    legend_y_start = 520
+    legend_padding = 20
+    labels = ["Empty Seat", "Your Selection", "Temporarily Reserved", "Sold"]
+    for index, (status, color) in enumerate(colors.items()):
+        x = 10 + index * (100 + legend_padding)
+        canvas.create_rectangle(x, legend_y_start, x + 100, legend_y_start + 30, fill=color, outline="")
+        canvas.create_text(x + 50, legend_y_start + 15, text=labels[index], fill="white", font=("Arial", 10))
+
+root = ctk.CTk()
+root.title("Concert Seat Selection")
+root.geometry("800x600")
+
+canvas = tk.Canvas(root, bg="#333333", width=800, height=550, highlightthickness=0)
+canvas.place(relx=0.5, rely=0.4, anchor="center")
+
+seat_info_label = tk.Label(root, text="", bg="white", fg="#333333", font=("Arial", 10))
+
+seat_circles = []
+
+for i in range(10):
+    row_circles = []
+    for j in range(20):
+        x = padding + j * (2 * circle_radius + padding)
+        y = padding + i * (2 * circle_radius + padding)
+        circle = canvas.create_oval(
+            x, y, x + 2 * circle_radius, y + 2 * circle_radius,
+            outline=colors["empty"], width=0, fill=colors["empty"]
+        )
+        canvas.tag_bind(circle, "<Button-1>", lambda event, row=i, col=j, circle=circle: toggle_seat(row, col, circle))
+        canvas.tag_bind(circle, "<Enter>", lambda event, row=i, col=j: show_seat_info(event, row, col))
+        canvas.tag_bind(circle, "<Leave>", hide_seat_info)
+        row_circles.append(circle)
+    seat_circles.append(row_circles)
+
+button_frame = tk.Frame(root)
+button_frame.place(relx=0.5, rely=0.85, anchor="center")
+
+confirm_button = ctk.CTkButton(button_frame, text="Confirm Selection", command=confirm_selection, fg_color="#D52941", width=120, font=("Arial", 10))
+confirm_button.grid(row=0, column=0, padx=10, pady=10)
+
+payment_button = ctk.CTkButton(button_frame, text="Payment Success", command=payment_success, fg_color="#D52941", width=120, font=("Arial", 10))
+payment_button.grid(row=0, column=2, padx=10, pady=10)
+
+draw_color_legend()
+
+root.mainloop()
